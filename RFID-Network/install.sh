@@ -91,13 +91,13 @@ npm install express mysql socket.io winston
 echo -e "Installing nRF24 libraries"
 cd RFIDNetworkPi
 git clone https://github.com/tmrh20/RF24.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24
-sudo make install -B -C server/RFIDNetworkPi/rf24libs/RF24
+sudo make install -B -C RFIDNetworkPi/rf24libs/RF24
 
 git clone https://github.com/tmrh20/RF24Network.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24Network
-sudo make install -B -C server/RFIDNetworkPi/rf24libs/RF24Network
+sudo make install -B -C RFIDNetworkPi/rf24libs/RF24Network
 
 git clone https://github.com/tmrh20/RF24Mesh.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24Mesh
-sudo make install -B -C server/RFIDNetworkPi/rf24libs/RF24Mesh
+sudo make install -B -C RFIDNetworkPi/rf24libs/RF24Mesh
 
 echo -e "Installing python wrapper"
 echo -e "${COL_LB} This will take a while and you won't see anything happening, but DON'T turn it off ${COL_DEFAULT}"
@@ -106,8 +106,9 @@ sudo apt-get -y install python-dev libboost-python-dev
 sudo ln -s /usr/lib/arm-linux-gnueabihf/libboost_python-py34.so /usr/lib/arm-linux-gnueabihf/libboost_python3.so 
 sudo apt-get -y install python-setuptools 
 
-python RFIDNetworkPi/rf24libs/RF24/pyRF24/setup.py build
-sudo python RFIDNetworkPi/rf24libs/RF24/pyRF24/setup.py install
+cd RFIDNetworkPi/rf24libs/RF24/pyRF24/
+sudo python setup.py build
+sudo python setup.py install
 
 echo -e "Creating rfidnetwork service."
 sudo touch /etc/systemd/system/rfidnetwork.service
