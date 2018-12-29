@@ -21,7 +21,8 @@ echo -e "${COL_LB}For recomended install type y (yes) when ever asked (Y/n) ${CO
 echo -e "${COL_LG}Starting step 2: changing RPi username, updating RPi and editing config file ${COL_DEFAULT}"
 # Change the password
 echo -e "${COL_LB}It is recommended that you change the password${COL_DEFAULT}"
-read -p "${COL_LB}Do you want to change the password? [Y/n] ${COL_LP}" yn
+echo -e "${COL_LB}Do you want to change the password? [Y/n] ${COL_LP}"
+read yn
 case $yn in
 	[Yy]* ) sudo passwd;;
 	[Nn]* ) echo "${COL_LR} It is not recommended to leave the default password ${COL_DEFAULT}";;
@@ -185,7 +186,8 @@ echo""
 
 
 echo -e "${COL_LG}Almost finished with installation.  The last step is to restart the RPi ${COL_DEFAULT}"
-read -p "${COL_LB}Do you want to restart now? [Y/n] ${COL_LP}" yn
+echo -e "${COL_LB}Do you want to restart now? [Y/n] ${COL_LP}" 
+read yn
 case $yn in
 	[Yy]* ) sudo reboot;;
 	[Nn]* ) echo -e "${COL_LR} You will need to restart before the system works. ${COL_DEFAULT}";;
