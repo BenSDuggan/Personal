@@ -25,7 +25,7 @@ echo -e "${COL_LB}Do you want to change the password? [Y/n] ${COL_LP}"
 read yn
 case $yn in
 	[Yy]* ) sudo passwd;;
-	[Nn]* ) echo -e "${COL_LR} It is not recommended to leave the default password ${COL_DEFAULT}";;
+	[Nn]* ) echo -e "${COL_LR}It is not recommended to leave the default password ${COL_DEFAULT}";;
 esac
 
 # Need to get admin username and password (mainly for mysql) and system password (mysql)
@@ -135,7 +135,7 @@ echo -e "${COL_LG}Starting step 5: Setting up MySQL database ${COL_DEFAULT}"
 echo -e "${COL_LB}Installing MySQL(MariaDB)${COL_DEFAULT}"
 sudo apt-get -y install mysql-server
 
-sudo mysql -uroot -p$userpass -e "GRANT ALL PRIVILEGES ON *.* TO '$adminuser'@'%' IDENTIFIED BY 'adminpass'";
+sudo mysql -uroot -p$userpass -e "GRANT ALL PRIVILEGES ON *.* TO '$adminuser'@'%' IDENTIFIED BY '$adminpass'";
 sudo mysql -uroot -p$userpass -e "GRANT FILE ON *.* TO '$adminuser'@'%'";
 sudo mysql -uroot -p$userpass -e "create database rfidnetwork";
 sudo mysql -uroot -p$userpass rfidnetwork -e "CREATE TABLE birds (rfidTag VARCHAR(10), bandID VARCHAR(20), sex VARCHAR(20), age VARCHAR(20), taggedDateTime DATETIME, taggedLocation VARCHAR(50), comment TEXT, UNIQUE(rfidTag))";
@@ -189,6 +189,6 @@ echo -e "${COL_LB}Do you want to restart now? [Y/n] ${COL_LP}"
 read yn
 case $yn in
 	[Yy]* ) sudo reboot;;
-	[Nn]* ) echo -e "${COL_LR} You will need to restart before the system works. ${COL_DEFAULT}";;
+	[Nn]* ) echo -e "${COL_LR}You will need to restart before the system works. ${COL_DEFAULT}";;
 esac
 
