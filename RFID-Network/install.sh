@@ -11,7 +11,7 @@ COL_LR='\033[1;31m' # Danger
 COL_LP='\033[1;35m' # User input
 
 # Getting pwd
-parDir=$(dirname "$0")
+parDir=$(pwd)
 
 
 echo -e "${COL_LB}Starting installation (this will take a while)... ${COL_DEFAULT}"
@@ -25,7 +25,7 @@ echo -e "${COL_LB}Do you want to change the password? [Y/n] ${COL_LP}"
 read yn
 case $yn in
 	[Yy]* ) sudo passwd;;
-	[Nn]* ) echo "${COL_LR} It is not recommended to leave the default password ${COL_DEFAULT}";;
+	[Nn]* ) echo -e "${COL_LR} It is not recommended to leave the default password ${COL_DEFAULT}";;
 esac
 
 # Need to get admin username and password (mainly for mysql) and system password (mysql)
@@ -43,7 +43,7 @@ echo ""
 
 # Configure /boot/config.txt
 echo -e "${COL_LB}Editing /bost/config.txt (raspi-config)${COL_DEFAULT}"
-sed -i 's/dtparam=spi=off/dtparam=spi=on/g' /boot/config.txt
+sudo sed -i 's/dtparam=spi=off/dtparam=spi=on/g' /boot/config.txt
 
 echo""
 
@@ -59,10 +59,10 @@ echo "    C -> Pin 5 (SCL / GPIO 3)"
 echo "    NC -> Pin 7 (GPCLK0 / GPIO 4)"
 echo "    - -> Pin 9 (Ground)"
 echo -e "${COL_LB}Editing RTC files${COL_DEFAULT}"
-sed -i '$ a dtoverlay=i2c-rtc,ds3231' /boot/config.txt
-sed -i "s:if \[ -e /run/systemd/system \] ; then:#if \[ -e /run/systemd/system \] ; then:g" /lib/udev/hwclock-set
-sed -i "8s:exit 0:#exit 0:g" /lib/udev/hwclock-set
-sed -i "9s:fi:#fi:g" /lib/udev/hwclock-set
+sudo sed -i '$ a dtoverlay=i2c-rtc,ds3231' /boot/config.txt
+sudo sed -i "s:if \[ -e /run/systemd/system \] ; then:#if \[ -e /run/systemd/system \] ; then:g" /lib/udev/hwclock-set
+sudo sed -i "8s:exit 0:#exit 0:g" /lib/udev/hwclock-set
+sudo sed -i "9s:fi:#fi:g" /lib/udev/hwclock-set
 echo""
 
 # ===== Step 4 =====
@@ -109,23 +109,22 @@ sudo apt-get -y install python-setuptools
 
 echo -e "${COL_LB}Installing RF24 python wrapper${COL_DEFAULT}"
 cd RFIDNetworkPi/rf24libs/RF24/pyRF24/
-sudo python setup.py build
+python setup.py build
 sudo python setup.py install
 
 echo -e "${COL_LB}Installing RF24Network python wrapper${COL_DEFAULT}"
 cd pyRF24Network
-sudo python setup.py build
+python setup.py build
 sudo python setup.py install
 
 echo -e "${COL_LB}Installing RF24Mesh python wrapper${COL_DEFAULT}"
 cd ../pyRF24Mesh
-sudo python setup.py build
+python setup.py build
 sudo python setup.py install
 
 echo -e "${COL_LB}Creating rfidnetwork service.${COL_DEFAULT}"
-sudo touch /etc/systemd/system/rfidnetwork.service
-sed -i '$ a \[Service\]' /etc/systemd/system/rfidnetwork.service
-sed -i '$ a ExecStart=${parDir}/RFID-Network/server/server.sh' /etc/systemd/system/rfidnetwork.service
+sudo bash -c 'echo "[Service]" >> /etc/systemd/system/rfidnetwork.service'
+sudo sed -i "$ a ExecStart=$parDir/RFID-Network/server/server.sh" /etc/systemd/system/rfidnetwork.service
 
 echo""
 
@@ -168,10 +167,10 @@ sudo sed -i '$ a static domain_name_server=1.1.1.1 8.8.8.8' /etc/dhcpcd.conf
 echo -e "${COL_LB}Configuring /etc/dnsmasq.conf${COL_DEFAULT}"
 sudo touch /etc/dnsmasq.conf
 sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig 
-sudo cp /home/pi/RFID-Network/server/ap/dnsmasq.conf /etc/dnsmasq.conf
+sudo cp $parDir/RFID-Network/server/ap/dnsmasq.conf /etc/dnsmasq.conf
 
 echo -e "${COL_LB}Configuring /etc/hostapd/hostapd.conf${COL_DEFAULT}"
-sudo cp /home/pi/RFID-Network/server/ap/hostapd.conf /etc/hostapd/hostapd.conf
+sudo cp $parDir/RFID-Network/server/ap/hostapd.conf /etc/hostapd/hostapd.conf
 
 echo -e "${COL_LB}Configuring /etc/default/hostapd${COL_DEFAULT}"
 sudo sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
