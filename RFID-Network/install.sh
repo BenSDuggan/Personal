@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # RFID-Network install script
-# Ben Duggan - 12/22/18 
+# Ben Duggan - 1/29/19 
 
 # Define colors used in the script
 COL_DEFAULT='\033[0;37m' # Normal terminal color
@@ -12,6 +12,15 @@ COL_LP='\033[1;35m' # User input
 
 # Getting pwd
 parDir=$(pwd)
+
+
+echo -e "${COL_LP}#########################################${COL_DEFAULT}"
+echo -e "${COL_LB}${COL_DEFAULT}"
+echo -e "${COL_LB}               RFIDNetwork               ${COL_DEFAULT}"
+echo -e "${COL_LB}              Ben S. Duggan              ${COL_DEFAULT}"
+echo -e "${COL_LB}        Indiana University * 2019        ${COL_DEFAULT}"
+echo -e "${COL_LB}${COL_DEFAULT}"
+echo -e "${COL_LP}#########################################${COL_DEFAULT}"
 
 
 echo -e "${COL_LB}Starting installation (this will take a while)... ${COL_DEFAULT}"
