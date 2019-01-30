@@ -80,7 +80,8 @@ echo -e "${COL_LG}Starting step 4: Setting up node.js, downloading code and sett
 # Downloading Repo
 echo -e "${COL_LB}Downloading GitHub repo ${COL_DEFAULT}"
 git clone https://github.com/BenSDuggan/RFID-Network-Build.git
-cd RFID-Network-Build
+mv RFID-Network-Build RFID-Network
+cd RFID-Network
 
 # Setup Node.js
 echo -e "${COL_LB}Installing node.js${COL_DEFAULT}"
