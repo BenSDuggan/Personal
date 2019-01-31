@@ -97,7 +97,7 @@ chmod +x server.sh
 
 echo -e "${COL_LB}Changing settings.json${COL_DEFAULT}"
 sed -i "6s/.*/    \"user\":\"$adminuser\",/" settings.json
-sed -i "7s/.*/    \"password\":\"$adminpass\"/" settings.json
+sed -i "7s/.*/    \"password\":\"$adminpass\",/" settings.json
 sed -i "32s/.*/      \"username\":\"$adminuser\",/" settings.json
 sed -i "33s/.*/      \"password\":\"$adminpass\"/" settings.json
 
@@ -142,6 +142,8 @@ sudo python setup.py install
 echo -e "${COL_LB}Creating rfidnetwork service.${COL_DEFAULT}"
 sudo bash -c 'echo "[Service]" >> /etc/systemd/system/rfidnetwork.service'
 sudo sed -i "$ a ExecStart=$parDir/RFID-Network/server/server.sh" /etc/systemd/system/rfidnetwork.service
+sudo sed -i 's/exit 0/sudo systemctl start rfidnetwork/g' /etc/rc.local
+sudo sed -i '$ a exit 0' /etc/rc.local
 
 echo""
 
