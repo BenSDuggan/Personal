@@ -14,13 +14,13 @@ COL_LP='\033[1;35m' # User input
 parDir=$(pwd)
 
 
-echo -e "${COL_LP}#########################################${COL_DEFAULT}"
-echo -e "${COL_LB}${COL_DEFAULT}"
-echo -e "${COL_LB}               RFIDNetwork               ${COL_DEFAULT}"
-echo -e "${COL_LB}              Ben S. Duggan              ${COL_DEFAULT}"
-echo -e "${COL_LB}        Indiana University * 2019        ${COL_DEFAULT}"
-echo -e "${COL_LB}${COL_DEFAULT}"
-echo -e "${COL_LP}#########################################${COL_DEFAULT}"
+echo -e "${COL_LP}###########################################${COL_DEFAULT}"
+echo -e "${COL_LB}#                                         #${COL_DEFAULT}"
+echo -e "${COL_LB}#               RFIDNetwork               #${COL_DEFAULT}"
+echo -e "${COL_LB}#              Ben S. Duggan              #${COL_DEFAULT}"
+echo -e "${COL_LB}#        Indiana University * 2019        #${COL_DEFAULT}"
+echo -e "${COL_LB}#                                         #${COL_DEFAULT}"
+echo -e "${COL_LP}###########################################${COL_DEFAULT}"
 
 
 echo -e "${COL_LB}Starting installation (this will take a while)... ${COL_DEFAULT}"
@@ -79,8 +79,7 @@ echo -e "${COL_LG}Starting step 4: Setting up node.js, downloading code and sett
 
 # Downloading Repo
 echo -e "${COL_LB}Downloading GitHub repo ${COL_DEFAULT}"
-git clone https://github.com/BenSDuggan/RFID-Network-Build.git
-mv RFID-Network-Build RFID-Network
+git clone https://github.com/BenSDuggan/RFID-Network.git
 cd RFID-Network
 
 # Setup Node.js
@@ -97,9 +96,9 @@ chmod +x server.sh
 
 echo -e "${COL_LB}Changing settings.json${COL_DEFAULT}"
 sed -i "6s/.*/    \"user\":\"$adminuser\",/" settings.json
-sed -i "7s/.*/    \"password\":\"$adminpass\",/" settings.json
-sed -i "32s/.*/      \"username\":\"$adminuser\",/" settings.json
-sed -i "33s/.*/      \"password\":\"$adminpass\"/" settings.json
+sed -i "7s/.*/    \"password\":\"$adminpass\"/" settings.json
+sed -i "34s/.*/      \"username\":\"$adminuser\",/" settings.json
+sed -i "35s/.*/      \"password\":\"$adminpass\"/" settings.json
 
 
 echo -e "${COL_LB}Creating node app${COL_DEFAULT}"
@@ -114,7 +113,7 @@ sudo make install -B -C RFIDNetworkPi/rf24libs/RF24
 git clone https://github.com/tmrh20/RF24Network.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24Network
 sudo make install -B -C RFIDNetworkPi/rf24libs/RF24Network
 
-git clone https://github.com/tmrh20/RF24Mesh.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24Mesh
+git clone https://github.com/BenSDuggan/RF24Mesh.git /home/pi/RFID-Network/server/RFIDNetworkPi/rf24libs/RF24Mesh
 sudo make install -B -C RFIDNetworkPi/rf24libs/RF24Mesh
 
 echo -e "${COL_LB}Installing python wrapper"
@@ -142,8 +141,6 @@ sudo python setup.py install
 echo -e "${COL_LB}Creating rfidnetwork service.${COL_DEFAULT}"
 sudo bash -c 'echo "[Service]" >> /etc/systemd/system/rfidnetwork.service'
 sudo sed -i "$ a ExecStart=$parDir/RFID-Network/server/server.sh" /etc/systemd/system/rfidnetwork.service
-sudo sed -i 's/exit 0/sudo systemctl start rfidnetwork/g' /etc/rc.local
-sudo sed -i '$ a exit 0' /etc/rc.local
 
 echo""
 
