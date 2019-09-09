@@ -1,0 +1,145 @@
+<html>
+<head>
+	<title>People - Phide</title>
+</head>
+<body>
+	<div class="" id="phide-people"></div>
+
+	<style>
+		img {
+		    
+		}
+	</style>
+
+	<script type="text/javascript">
+		/* 
+		 * Ben S Duggan - 2019
+		 */
+
+		 // Display members page
+		const GREEK_ALPHABET = ['', 'alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','omikron','pi','rho','sigma','tau','upsilon','phi','chi','psi','omega'];
+
+
+		// Get member information from Google Spreadsheet
+		const SPREADSHEET_ID = "14Y03hyhLZKGSxGQK60cfo1reIkAO4eyONz4dOw8ymgQ";
+
+		function loadJSON(path, success, error)	{
+		    var xhr = new XMLHttpRequest();
+		    xhr.onreadystatechange = function()
+		    {
+		        if (xhr.readyState === XMLHttpRequest.DONE) {
+		            if (xhr.status === 200) {
+		                if (success)
+		                    success(JSON.parse(xhr.responseText));
+		            } else {
+		                if (error)
+		                    error(xhr);
+		            }
+		        }
+		    };
+		    xhr.open("GET", path, true);
+		    xhr.send();
+		}
+
+		function parseJSON(data) {
+			let arr = data.feed.entry; // Raw array of JSON objects that needs to be parsed
+			let rowArr = []; // Row from array
+			let tmpEntry = []; // Temp row from array
+			let raw = []; // Raw, correctly formated, data
+
+			// Data isn't in readable form so need to convert
+			for(var i=0; i<arr.length; i++) {
+				rowArr = arr[i].content["$t"].split(", "); //Row in the spread sheet w/o first column
+				raw.push({"name":arr[i]["title"]["$t"]}); //Initialize JSON
+
+				for(var j=0; j<rowArr.length; j++) {
+					tmpEntry = [rowArr[j].substr(0, rowArr[j].indexOf(':')), rowArr[j].substr(rowArr[j].indexOf(':') + 2)];
+
+					// Check to see if there is an array in a column
+					if(tmpEntry[1].indexOf(';') == -1) {
+						// no array
+						raw[raw.length-1][tmpEntry[0]] = tmpEntry[1];
+					}
+					else {
+						// Array
+						raw[raw.length-1][tmpEntry[0]] = tmpEntry[1].split(';');
+					}	
+				}
+			}
+
+			// Massage data
+			// Get all the args used
+			let args = [];
+			for(var i=0; i<raw.length; i++) {
+				for(var j in raw[i]) {
+					if(!args.includes(j)) {
+						args.push(j);
+					}
+				}
+			}
+			// Add args to raw data
+			for(var i=0; i<raw.length; i++) {
+				for(var j=0; j<args.length; j++) {
+					if(!raw[i].hasOwnProperty(args[j])) {
+						raw[i][args[j]] = "";
+					}
+				}
+			}
+
+			console.log(raw);
+			return raw;
+		}
+
+		loadJSON('https://spreadsheets.google.com/feeds/list/'+SPREADSHEET_ID+'/od6/public/basic?alt=json', function(data) { loadPeople(data); }, function(xhr) { console.error(xhr); });
+
+		function loadPeople(members) {
+			let member_data = parseJSON(members);
+
+			let classes = {}; // Oject containing an array of all the people in a given class
+
+			// Place people into array of same class
+			for(let i=0; i<member_data.length; i++) {
+				if(!classes[member_data[i]['class'].toLowerCase()]) {
+					classes[member_data[i]['class'].toLowerCase()] = [];
+				}
+				classes[member_data[i]['class'].toLowerCase()].push(member_data[i]);
+			}
+
+			let container_data = '';
+			// Append people to div based on their class (reverse order)
+			for(let i=GREEK_ALPHABET.length-1; i>=0; i--) {
+				let l = GREEK_ALPHABET[i];
+				if(l.toLowerCase() in classes) {
+					container_data += '<div class="wsite-section-elements"><h2 class="wsite-content-title">' + l.toLowerCase().split(' ').map((s) => s.charAt(0).toUpperCase() + s.substring(1)).join(' '); + '</h2>'; // Add class to each section and capitalize every other word (future proof for Alpha Alpha, Alpha Beta etc.)
+					container_data += '<div class="wsite-multicol"><div class="wsite-multicol-table-wrap" style="margin:0 0px;"><table class="wsite-multicol-table"><tbody class="wsite-multicol-tbody"><tr class="wsite-multicol-tr">';
+					let count =0;
+					for(let j=0; j<classes[l].length; j++) {
+						if(classes[l][j]["year"] == "Graduated") {
+							continue;
+						}
+						if(count%3 == 0) {
+							container_data += '</tr><tr class="wsite-multicol-tr">';							
+						}
+
+						container_data += '<td class="wsite-multicol-col" style="padding:0 15px;"><div class="wsite-image wsite-image-border-none" style="padding-top:10px;padding-bottom:10px;margin-left:0px;margin-right:0px;text-align:center">';
+
+						container_data += '<a><img src="' + classes[l][j]['pic'] + '" alt="Picture" style="width:151;max-width:100%"></a>';
+
+						container_data += '<div style="display:block;font-size:90%">' + classes[l][j]['name'] + '</div>';
+
+						container_data += '</div></td>';
+
+						count++;
+					}
+					container_data += '</tr></tbody></table></div></div><hr>';
+				}
+
+			}
+
+			container_data = container_data.substr(0, container_data.length-4); // Remove last hr
+
+			document.getElementById('phide-people').innerHTML = container_data;
+		}
+	</script>
+</body>
+</html>

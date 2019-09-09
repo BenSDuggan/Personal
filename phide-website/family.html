@@ -1,0 +1,327 @@
+<html>
+<head>
+	<title>Family - Phide</title>
+</head>
+<body>
+	<div class="" id="phide-familyTree"></div>
+
+	<style type="text/css">
+		.phide-button {
+			background-color: #4CAF50; /* Green */
+			border: none;
+			color: white;
+			padding: 7px 16px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 13px;
+			margin: 4px 2px;
+			cursor: pointer;
+		}
+		#phide-familyTree {
+			width:100%;
+		}
+	</style>
+	<script type="text/javascript" src="https://visjs.github.io/vis-network/dist/vis-network.min.js"></script>
+	<link href="https://visjs.github.io/vis-network/dist/vis-network.min.css" rel="stylesheet" type"text/css" />
+	<script type="text/javascript">
+		/* 
+		 * Ben S Duggan - 2019
+		 */
+
+		 // Display members page
+		const GREEK_ALPHABET = ['alpha','beta','gamma','delta','epsilon','zeta','eta','theta','iota','kappa','lambda','mu','nu','xi','omikron','pi','rho','sigma','tau','upsilon','phi','chi','psi','omega'];
+
+
+		// Get member information from Google Spreadsheet
+		const SPREADSHEET_ID = "14Y03hyhLZKGSxGQK60cfo1reIkAO4eyONz4dOw8ymgQ";
+
+		function loadJSON(path, success, error)	{
+		    var xhr = new XMLHttpRequest();
+		    xhr.onreadystatechange = function()
+		    {
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+			    if (xhr.status === 200) {
+				if (success)
+				    success(JSON.parse(xhr.responseText));
+			    } else {
+				if (error)
+				    error(xhr);
+			    }
+			}
+		    };
+		    xhr.open("GET", path, true);
+		    xhr.send();
+		}
+
+		function parseJSON(data) {
+			let arr = data.feed.entry; // Raw array of JSON objects that needs to be parsed
+			let rowArr = []; // Row from array
+			let tmpEntry = []; // Temp row from array
+			let raw = []; // Raw, correctly formated, data
+
+			// Data isn't in readable form so need to convert
+			for(var i=0; i<arr.length; i++) {
+				rowArr = arr[i].content["$t"].split(", "); //Row in the spread sheet w/o first column
+
+				raw.push({"name":arr[i]["title"]["$t"]}); //Initialize JSON
+
+				for(var j=0; j<rowArr.length; j++) {
+					tmpEntry = [rowArr[j].substr(0, rowArr[j].indexOf(':')), rowArr[j].substr(rowArr[j].indexOf(':') + 2)];
+
+					// Check to see if there is an array in a column
+					if(tmpEntry[1].indexOf(';') == -1) {
+						// no array
+						raw[raw.length-1][tmpEntry[0]] = tmpEntry[1];
+					}
+					else {
+						// Array
+						raw[raw.length-1][tmpEntry[0]] = tmpEntry[1].split(';');
+					}
+				}
+			}
+
+			// Massage data
+			// Get all the args used
+			let args = [];
+			for(var i=0; i<raw.length; i++) {
+				for(var j in raw[i]) {
+					if(!args.includes(j)) {
+						args.push(j);
+					}
+				}
+			}
+			// Add args to raw data
+			for(var i=0; i<raw.length; i++) {
+				for(var j=0; j<args.length; j++) {
+					if(!raw[i].hasOwnProperty(args[j])) {
+						raw[i][args[j]] = "";
+					}
+				}
+			}
+
+			// Delete people without a family :(
+			tmp = [];
+			for(var i=0; i<raw.length; i++) {
+				if(raw[i]["family"].length != 0) {
+					tmp.push(raw[i]);
+				}
+			}
+			raw = tmp;
+
+			console.log(raw);
+			return raw;
+		}
+
+		var members = null;
+		//loadJSON('https://spreadsheets.google.com/feeds/list/'+SPREADSHEET_ID+'/od6/public/basic?alt=json', function(data) { members=data; loadFamilyTree('Fleck'); }, function(xhr) { console.error(xhr); });
+		loadJSON('https://spreadsheets.google.com/feeds/list/'+SPREADSHEET_ID+'/od6/public/basic?alt=json', function(data) { members=data; loadAllFamilies(); }, function(xhr) { console.error(xhr); });
+
+
+		let network = null;
+
+		
+		function loadAllFamilies(hierarchical=false, images=true) {
+			let member_data = parseJSON(members);
+			let colors = ['#7FDBFF','#01FF70','#FF851B','#B10DC9','#0074D9','#FF4136','#FFDC00','#2ECC40','#001f3f','#AAAAAA','#111111','#DDDDDD','#FFFFFF'];
+			let color_index = 0;
+			let family_colors = {};
+
+			// Create json object with family names as key and array of people as values
+			let families = {};
+			for(var i=0; i<member_data.length; i++) {
+				if(!families.hasOwnProperty(member_data[i]['family'])) {
+					families[member_data[i]['family']] = [];
+				}
+				if(!family_colors.hasOwnProperty(member_data[i]['family'])) {
+					family_colors[member_data[i]['family']] = colors[color_index];
+					color_index++;
+				}
+				families[member_data[i]['family']].push(member_data[i]);
+			}
+
+			let nodes = [];
+			let edges = [];
+			let nameIdMap = {}; // Used to get the index id of names (key)
+			let leaders = []; // Leader of the family (most senior family member)
+
+			// Add people to nodes
+			for(var i=0; i<member_data.length; i++) {
+				if(member_data[i]['name'] != 'Ben Kelly' && false) {
+					//continue;
+					if(!member_data[i].hasOwnProperty('pic')){
+						member_data[i]['pic'] = '';
+					}
+				}
+
+				if(member_data[i]['pic'] == '' || !images)
+					nodes.push({id:i, shape:'circularImage', image:'', label:member_data[i]['name'], color:family_colors[member_data[i]['family']]});
+				else
+					nodes.push({id:i, shape:'image', image:member_data[i]['pic'], label:member_data[i]['name'], color:family_colors[member_data[i]['family']]});
+
+				//nodes.push({id:i, shape:'circularImage', image:member_data[i]['pic'], label:member_data[i]['name'], color:family_colors[member_data[i]['family']]});
+				//nodes.push({id:i, shape:'square',image:"", label:member_data[i]['name'], color:family_colors[member_data[i]['family']]});
+				nameIdMap[member_data[i]['name']] = i;
+			}
+
+			// Connect the nodes (people)
+			for(var i=0; i<nodes.length; i++) {
+				if(nameIdMap.hasOwnProperty(member_data[i]['big']) || Array.isArray(member_data[i]['big'])) {
+					// Multiple bigs
+					if(Array.isArray(member_data[i]['big'])) {
+						for(var j=0; j<member_data[i]['big'].length; j++) {
+							edges.push({from:i, to:nameIdMap[member_data[i]['big'][j]], arrows:'from'});
+						}
+					}
+					else {
+						edges.push({from:i, to:nameIdMap[member_data[i]['big']], arrows:'from'});
+					}
+				}
+				else {
+					// Leader of the family's index
+					leaders.push(i);
+				}
+			}
+
+			document.getElementById('phide-familyTree').innerHTML = '<div id="phide-familyTree-control"><button class="phide-button" onclick="loadAllFamilies(hierarchical=true);">View hierarchical structure</button></div><div id="phide-familyTree-tree"></div>';
+			var container = document.getElementById('phide-familyTree-tree');
+			var data = {
+				nodes:nodes,
+				edges: edges
+			};
+			var options = {
+				nodes: {
+					borderWidth:4,
+					size:30,
+					color: {
+						border:'#222222',
+						background:'#666666'
+					},
+					font:{color:'black'}
+				},
+				edges:{
+					color:'lightgrey'
+				},
+				height:'1000px'
+			};
+			if(hierarchical) {
+				console.log(1)
+				options["layout"] = {hierarchical:{direction: "UD"}};
+				document.getElementById('phide-familyTree-control').innerHTML = '<button class="phide-button" onclick="loadAllFamilies(hierarchical=false);">View fluid structure</button>';
+			}
+
+			var family_buttons = "";
+
+			for(var f in family_colors) {
+				family_buttons += '<button class="phide-button" onclick="loadFamilyTree(\''+f+'\');" style="background-color:'+family_colors[f]+';">'+f+'</button>';
+			}
+			console.log(family_buttons);
+
+			if(family_buttons.length > 0)
+				family_buttons = ' | View individual family trees: ' + family_buttons;
+			document.getElementById('phide-familyTree-control').innerHTML += family_buttons;	
+
+			console.log(document.getElementById('phide-familyTree-control').innerHTML)		
+
+			network = new vis.Network(container, data, options);
+		}
+
+		function loadFamilyTree(f, images=true) {
+			let member_data = parseJSON(members);
+
+			console.log(member_data);
+
+			// Create json object with family names as key and array of people as values
+			let families = {};
+			for(var i=0; i<member_data.length; i++) {
+				if(!families.hasOwnProperty(member_data[i]['family'])) {
+					families[member_data[i]['family']] = [];
+				}
+				families[member_data[i]['family']].push(member_data[i]);
+			}
+			
+			let nodes = [];
+			let edges = [];
+			let nameIdMap = {}; // Used to get the index id of names (key)
+			let leaders = []; // Leader of the family (most senior family member)
+
+			// Add people to nodes
+			for(var i=0; i<families[f].length; i++) {
+				if(families[f][i]['pic'] == '' || !images)
+					nodes.push({id:i, shape:'circularImage', image:'', label:families[f][i]['name'], color:'#551B8B'});
+				else
+					nodes.push({id:i, shape:'image',image:families[f][i]['pic'], label:families[f][i]['name'], color:'#551B8B'});
+				//nodes.push({id:i, shape:'circularImage',image:"", label:families[f][i]['name'], color:'#551B8B'});
+				nameIdMap[families[f][i]['name']] = i;
+			}
+
+			// Connect the nodes (people)
+			for(var i=0; i<nodes.length; i++) {
+				if(nameIdMap.hasOwnProperty(families[f][i]['big']) || Array.isArray(families[f][i]['big'])) {
+					// Multiple bigs
+					if(Array.isArray(families[f][i]['big'])) {
+						for(var j=0; j<families[f][i]['big'].length; j++) {
+							edges.push({from:i, to:nameIdMap[families[f][i]['big'][j]], arrows:'from'});
+						}
+					}
+					else {
+						edges.push({from:i, to:nameIdMap[families[f][i]['big']], arrows:'from'});
+					}
+				}
+				else {
+					// Leader of the family's index
+					leaders.push(i);
+				}
+			}
+
+			// Set the level of each node based off of parents
+			let count = 0;
+			while(leaders.length > 0) {
+				for(var i=0; i<leaders.length; i++) {
+					nodes[leaders[i]]['level'] = count;
+				}
+				let tmp = [];
+				for(var i=0; i<edges.length; i++) {
+					if(leaders.includes(edges[i]['to'])) {
+						tmp.push(edges[i]['from']);
+					}
+				}
+				leaders = tmp;
+
+
+				count++;
+			}
+
+
+			document.getElementById('phide-familyTree').innerHTML = '<div id="phide-familyTree-'+f+'"><h3>'+f+' Family</h3><button class="phide-button" onclick="loadAllFamilies();">View all families</button><div id="phide-familyTree-'+f+'-tree"></div></div>';
+			var container = document.getElementById('phide-familyTree-'+f+'-tree');
+			var data = {
+				nodes:nodes,
+				edges: edges
+			};
+			var options = {
+				nodes: {
+					borderWidth:4,
+					size:30,
+					color: {
+						border:'#222222',
+						background:'#666666'
+					},
+					font:{color:'#111111'}
+				},
+				edges:{
+					color:'lightgrey'
+				},
+				layout: {
+					hierarchical: {
+						direction: "UD"
+					}
+				},
+				height:'1000px'
+			};
+
+			network = new vis.Network(container, data, options);
+		}
+	</script>
+</body>
+</html>
