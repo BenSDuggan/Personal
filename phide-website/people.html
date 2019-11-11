@@ -43,6 +43,7 @@
 
 		function parseJSON(data) {
 			let arr = data.feed.entry; // Raw array of JSON objects that needs to be parsed
+			console.log(arr)
 			let rowArr = []; // Row from array
 			let tmpEntry = []; // Temp row from array
 			let raw = []; // Raw, correctly formated, data
@@ -93,6 +94,8 @@
 		loadJSON('https://spreadsheets.google.com/feeds/list/'+SPREADSHEET_ID+'/od6/public/basic?alt=json', function(data) { loadPeople(data); }, function(xhr) { console.error(xhr); });
 
 		function loadPeople(members) {
+			console.log(members)
+
 			let member_data = parseJSON(members);
 
 			let classes = {}; // Oject containing an array of all the people in a given class
