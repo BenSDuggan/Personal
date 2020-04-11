@@ -4,3 +4,12 @@
 * Spacedusters
 * Rainbowperin
 * evil
+
+## Things to install
+
+### LaTeX
+
+
+
+
+
